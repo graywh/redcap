@@ -6,7 +6,7 @@ redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
              stringsAsFactors=FALSE, na.strings='')
 }
 
-redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', factors=TRUE, labels=TRUE, checkboxLabels=FALSE, forms=NULL) {
+redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL) {
 
     if (!require('RCurl')) {
         stop('RCurl is not installed')
@@ -40,19 +40,23 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
 
     for (i in seq(nrow(meta_data))) {
         fld <- as.list(meta_data[i,])
+        choices <- redcapExtractChoices(fld$select_choices_or_calculations)
+        nums <- choices$numbers
+        choices <- choices$labels
 
         if (fld$field_type == 'checkbox') {
-            # extract checkbox choices to identify sub-variables in data
-            choices <- strsplit(fld$select_choices_or_calculations, ' *[|] *')[[1]]
-            choices <- sub('^[ ]+(.*)$', '\\1', choices)
-            choices <- sub('(.*)[ ]+$', '\\1', choices)
-            nums <- sub('^([^,]+).*$', '\\1', choices)
-            choices <- sub('^[^,]+[, ]+(.*)$', '\\1', choices)
 
             for (i in seq(length(nums))) {
                 checkbox_name <- sprintf('%s___%s', fld$field_name, nums[i])
-                if (factors) {
-                    data[[checkbox_name]] <- factor(data[[checkbox_name]])
+                if (labels) {
+                    if (checkboxLabels) {
+                        levels <- choices[i]
+                    } else {
+                        levels <- c("Unchecked", "Checked")
+                    }
+                    data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=levels)
+                } else {
+                    data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=c(0,1))
                 }
                 if (Hmisc) {
                     label(data[[checkbox_name]]) <- sprintf('%s (choice=%s)', clean(fld$field_label), rmq(choices[i]))
@@ -60,9 +64,18 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
             }
 
         } else {
-            if (fld$field_type %in% c('select','radio','dropdown','yesno','truefalse')) {
-                if (factors) {
-                    data[[fld$field_name]] <- factor(data[[fld$field_name]])
+            if (fld$field_type %in% c('radio','dropdown','yesno','truefalse')) {
+                if (labels) {
+                    if (fld$field_type == 'yesno') {
+                        levels <- c('No','Yes')
+                    } else if (fld$field_type == 'truefalse') {
+                        levels <- c('False','True')
+                    } else {
+                        levels <- choices
+                    }
+                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=choices)
+                } else {
+                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=nums)
                 }
 
             } else if ((!is.na(fld$text_validation_type_or_show_slider_number) &&
@@ -79,13 +92,21 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
 
     field_names <- sprintf('%s_complete', unique(meta_data$form_name))
     for (field_name in field_names) {
-        if (factors) {
-            data[[field_name]] <- factor(data[[field_name]])
-        }
+        data[[field_name]] <- factor(data[[field_name]], levels=c('Incomplete','Complete'))
         if (Hmisc) {
             label(data[[field_name]]) <- 'Complete?'
         }
     }
 
     data
+}
+
+redcapExtractChoices <- function(choices) {
+    # extract checkbox choices to identify sub-variables in data
+    choices <- strsplit(choices, ' *[|] *')[[1]]
+    choices <- sub('^[ ]+(.*)$', '\\1', choices)
+    choices <- sub('(.*)[ ]+$', '\\1', choices)
+    nums <- sub('^([^,]+).*$', '\\1', choices)
+    choices <- sub('^[^,]+[, ]+(.*)$', '\\1', choices)
+    list(numbers=nums, labels=choices)
 }
