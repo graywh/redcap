@@ -1,3 +1,11 @@
+redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
+    read.csv(text=postForm(uri=URI, token=APIKEY, content='metadata',
+                           format='csv',
+                           # RCurl options
+                           .opts=curlOptions(ssl.verifyhost=TRUE)),
+             stringsAsFactors=FALSE, na.strings='')
+}
+
 redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', factors=TRUE, labels=TRUE, checkboxLabels=FALSE, forms=NULL) {
 
     if (!require('RCurl')) {
@@ -11,11 +19,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
     Hmisc <- require('Hmisc')
 
     # Fetch metadata
-    meta_data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='metadata',
-                                        format='csv',
-                                        # RCurl options
-                                        .opts=curlOptions(ssl.verifyhost=TRUE)),
-                          stringsAsFactors=FALSE, na.strings='')
+    meta_data <- redcapExportMeta(APIKEY, URI)
 
     form_names <- unique(meta_data$form_name)
     if (!is.null(forms)) {
