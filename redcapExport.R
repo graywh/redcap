@@ -98,7 +98,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
 
     field_names <- sprintf('%s_complete', forms)
     for (field_name in field_names) {
-        data[[field_name]] <- factor(data[[field_name]], levels=c('Incomplete','Complete'))
+        data[[field_name]] <- factor(data[[field_name]], levels=c('Incomplete','Unverified','Complete'))
         if (Hmisc) {
             label(data[[field_name]]) <- 'Complete?'
         }
