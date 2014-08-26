@@ -21,10 +21,11 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     # Fetch metadata
     meta_data <- redcapExportMeta(APIKEY, URI)
 
+    form_field_names <- sprintf('%s_complete', unique(meta_data$form_name))
     if (!is.null(forms)) {
         forms <- intersect(forms, unique(meta_data$form_name))
     } else if (!is.null(fields)) {
-        fields <- intersect(fields, unique(meta_data$field_name))
+        fields <- intersect(fields, c(unique(meta_data$field_name), form_field_names))
     }
     if (length(forms) > 0) {
         meta_data <- subset(meta_data, meta_data$form_name %in% forms)
@@ -96,11 +97,15 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
         }
     }
 
-    field_names <- sprintf('%s_complete', forms)
-    for (field_name in field_names) {
-        data[[field_name]] <- factor(data[[field_name]], levels=c('Incomplete','Unverified','Complete'))
+    if (length(fields) > 0) {
+        form_field_names <- intersect(form_field_names, fields)
+    } else {
+        form_field_names <- sprintf('%s_complete', forms)
+    }
+    for (form_field_name in form_field_names) {
+        data[[form_field_name]] <- factor(data[[form_field_name]], levels=c('Incomplete','Unverified','Complete'))
         if (Hmisc) {
-            label(data[[field_name]]) <- 'Complete?'
+            label(data[[form_field_name]]) <- 'Complete?'
         }
     }
 
