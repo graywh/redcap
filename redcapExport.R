@@ -33,7 +33,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
                                    # Redcap API options
                                    rawOrLabel=c('raw','label')[1 + labels], # real values or codes
                                    exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
-                                   forms=form_names,
+                                   forms=paste(form_names, collapse=','),
                                    # RCurl options
                                    .opts=curlOptions(ssl.verifyhost=TRUE)),
                      stringsAsFactors=FALSE, na.strings='')
