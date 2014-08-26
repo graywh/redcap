@@ -29,19 +29,13 @@ redcapFun <- function(APIKEY) {
             choices <- sub('^[^,]+[, ]+(.*)$', '\\1', choices)
             label <- sprintf('label(data$%s___%s) <- "%s (choice=%s)"', fld$field_name, nums, sub('[\n]', ' ', fld$field_label), rmq(choices))
             factor <- sprintf('data$%1$s___%2$s <- factor(data$%1$s___%2$s, levels=c("0", "1"), lables=c("Unchecked", "Checked"))', fld$field_name, nums)
-        } else if(fld$field_type %in% c('radio', 'dropdown')) {
-            label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
-            factor <- sprintf('attr(data$%s, "redcapLevels") <- NULL', fld$field_name)
-        } else if(fld$field_type == 'yesno') {
-            label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
-            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("Yes", "No"))', fld$field_name)
-        } else if(fld$field_type == 'truefalse') {
-            label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
-            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("True", "False"))', fld$field_name)
-        } else if(fld$field_type %in% c('notes', 'text', 'descriptive')) {
-            label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
         } else {
-            print(sprintf("I don't know field_type %s for field %s", fld$field_type, fld$field_name))
+            label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
+            if(fld$field_type == 'yesno') {
+                factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("Yes", "No"))', fld$field_name)
+            } else if(fld$field_type == 'truefalse') {
+                factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("True", "False"))', fld$field_name)
+            }
         }
         labels[[i]] <- label
         factors[[i]] <- factor
