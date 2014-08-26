@@ -24,8 +24,19 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     form_field_names <- sprintf('%s_complete', unique(meta_data$form_name))
     if (!is.null(forms)) {
         forms <- intersect(forms, unique(meta_data$form_name))
-    } else if (!is.null(fields)) {
-        fields <- intersect(fields, c(unique(meta_data$field_name), form_field_names))
+        form_field_names <- sprintf('%s_complete', forms)
+    }
+    if (!is.null(fields)) {
+        form_fields <- subset(meta_data, form_name %in% forms)$field_name
+        if (!all(fields %in% form_fields)) {
+            specific_fields <- intersect(fields, c(unique(meta_data$field_name), form_field_names))
+            fields <- union(form_fields, specific_fields)
+            if (!is.null(forms)) {
+                fields <- c(fields, form_field_names)
+                forms <- NULL
+            }
+            form_field_names <- intersect(form_field_names, fields)
+        }
     }
     if (length(forms) > 0) {
         meta_data <- subset(meta_data, meta_data$form_name %in% forms)
@@ -45,7 +56,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                                    .opts=curlOptions(ssl.verifyhost=TRUE)),
                      stringsAsFactors=FALSE, na.strings='')
 
-    for (i in seq(nrow(meta_data))) {
+    for (i in seq_len(nrow(meta_data))) {
         fld <- as.list(meta_data[i,])
         choices <- redcapExtractChoices(fld$select_choices_or_calculations)
         nums <- choices$numbers
@@ -97,11 +108,6 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
         }
     }
 
-    if (length(fields) > 0) {
-        form_field_names <- intersect(form_field_names, fields)
-    } else {
-        form_field_names <- sprintf('%s_complete', forms)
-    }
     for (form_field_name in form_field_names) {
         data[[form_field_name]] <- factor(data[[form_field_name]], levels=c('Incomplete','Unverified','Complete'))
         if (Hmisc) {
