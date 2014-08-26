@@ -12,7 +12,6 @@ redcapFun <- function(APIKEY) {
 
     labels <- vector('list', nrow(gg))
     factors <- vector('list', nrow(gg))
-    levels <- vector('list', nrow(gg))
     # remove quote characters, replace line breaks
     # gg$field_label <- gsub('[\x80-\x9f]', '', clean(gg$field_label), useBytes=TRUE)
     gg$field_label <- rmq(iconv(clean(gg$field_label), "WINDOWS-1252", "UTF-8"))
@@ -22,7 +21,6 @@ redcapFun <- function(APIKEY) {
         fld <- gg[i,]
         label <- NULL
         factor <- NULL
-        level <- NULL
         if(fld$field_type == 'checkbox') {
             choices <- strsplit(fld$select_choices_or_calculations, ' *[|] *')[[1]]
             choices <- sub('^[ ]+(.*)$', '\\1', choices)
@@ -30,19 +28,16 @@ redcapFun <- function(APIKEY) {
             nums <- sub('^([^,]+).*$', '\\1', choices)
             choices <- sub('^[^,]+[, ]+(.*)$', '\\1', choices)
             label <- sprintf('label(data$%s___%s) <- "%s (choice=%s)"', fld$field_name, nums, sub('[\n]', ' ', fld$field_label), rmq(choices))
-            factor <- sprintf('data$%1$s___%2$s <- factor(data$%1$s___%2$s, levels=c("0", "1"))', fld$field_name, nums)
-            level <- sprintf('levels(data$%s___%s) <- c("Unchecked", "Checked")', fld$field_name, nums)
+            factor <- sprintf('data$%1$s___%2$s <- factor(data$%1$s___%2$s, levels=c("0", "1"), lables=c("Unchecked", "Checked"))', fld$field_name, nums)
         } else if(fld$field_type %in% c('radio', 'dropdown')) {
             label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
             factor <- sprintf('attr(data$%s, "redcapLevels") <- NULL', fld$field_name)
         } else if(fld$field_type == 'yesno') {
             label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
-            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"))', fld$field_name)
-            level <- sprintf('levels(data$%s) <- c("Yes", "No")', fld$field_name)
+            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("Yes", "No"))', fld$field_name)
         } else if(fld$field_type == 'truefalse') {
             label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
-            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"))', fld$field_name)
-            level <- sprintf('levels(data$%s) <- c("True", "False")', fld$field_name)
+            factor <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("1", "0"), labels=c("True", "False"))', fld$field_name)
         } else if(fld$field_type %in% c('notes', 'text', 'descriptive')) {
             label <- sprintf('label(data$%s) <- "%s"', fld$field_name, sub('[\n]', ' ', fld$field_label))
         } else {
@@ -50,16 +45,14 @@ redcapFun <- function(APIKEY) {
         }
         labels[[i]] <- label
         factors[[i]] <- factor
-        levels[[i]] <- level
     }
 
     # <instrument>_complete
     complete <- sprintf('%s_complete', unique(gg$form_name))
     labels[[nrow(gg)+1]] <- sprintf('label(data$%s) <- "Complete?"', complete)
-    factors[[nrow(gg)+1]] <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("2", "1", "0"))', complete)
-    levels[[nrow(gg)+1]] <- sprintf('levels(data$%s) <- c("Complete", "Unverified", "Incomplete")', complete)
+    factors[[nrow(gg)+1]] <- sprintf('data$%1$s <- factor(data$%1$s, levels=c("2", "1", "0"), labels=c("Complete", "Unverified", "Incomplete"))', complete)
 
-    info <- c('library(Hmisc)', unlist(factors), unlist(levels), unlist(labels))
+    info <- c('library(Hmisc)', unlist(factors), unlist(labels))
     # write(info, 'data_labels.r')
     data <- exportRecords(rcon)
     # source('data_labels.r')
