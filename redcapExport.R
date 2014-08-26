@@ -1,4 +1,4 @@
-redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', factors=TRUE, labels=TRUE, checkboxLabels=FALSE) {
+redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', factors=TRUE, labels=TRUE, checkboxLabels=FALSE, forms=NULL) {
 
     if (!require('RCurl')) {
         stop('RCurl is not installed')
@@ -17,12 +17,19 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
                                         .opts=curlOptions(ssl.verifyhost=TRUE)),
                           stringsAsFactors=FALSE, na.strings='')
 
+    form_names <- unique(meta_data$form_name)
+    if (!is.null(forms)) {
+        form_names <- intersect(forms, form_names)
+        meta_data <- subset(meta_data, meta_data$form_name %in% form_names)
+    }
+
     # Fetch records
     data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='record',
                                    format='csv', type='flat',
                                    # Redcap API options
                                    rawOrLabel=c('raw','label')[1 + labels], # real values or codes
                                    exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
+                                   forms=form_names,
                                    # RCurl options
                                    .opts=curlOptions(ssl.verifyhost=TRUE)),
                      stringsAsFactors=FALSE, na.strings='')
@@ -66,13 +73,13 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', facto
         }
     }
 
-    form_names <- sprintf('%s_complete', unique(meta_data$form_name))
-    for (form_name in form_names) {
+    field_names <- sprintf('%s_complete', unique(meta_data$form_name))
+    for (field_name in field_names) {
         if (factors) {
-            data[[form_name]] <- factor(data[[form_name]])
+            data[[field_name]] <- factor(data[[field_name]])
         }
         if (Hmisc) {
-            label(data[[form_name]]) <- 'Complete?'
+            label(data[[field_name]]) <- 'Complete?'
         }
     }
 
