@@ -6,7 +6,7 @@ redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
              stringsAsFactors=FALSE, na.strings='')
 }
 
-redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL) {
+redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL, fields=NULL) {
 
     if (!require('RCurl')) {
         stop('RCurl is not installed')
@@ -21,10 +21,15 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     # Fetch metadata
     meta_data <- redcapExportMeta(APIKEY, URI)
 
-    form_names <- unique(meta_data$form_name)
     if (!is.null(forms)) {
-        form_names <- intersect(forms, form_names)
-        meta_data <- subset(meta_data, meta_data$form_name %in% form_names)
+        forms <- intersect(forms, unique(meta_data$form_name))
+    } else if (!is.null(fields)) {
+        fields <- intersect(fields, unique(meta_data$field_name))
+    }
+    if (length(forms) > 0) {
+        meta_data <- subset(meta_data, meta_data$form_name %in% forms)
+    } else if (length(fields) > 0) {
+        meta_data <- subset(meta_data, meta_data$field_name %in% fields)
     }
 
     # Fetch records
@@ -33,7 +38,8 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                                    # Redcap API options
                                    rawOrLabel=c('raw','label')[1 + labels], # real values or codes
                                    exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
-                                   forms=paste(form_names, collapse=','),
+                                   forms=paste(forms, collapse=','),
+                                   fields=paste(fields, collapse=','),
                                    # RCurl options
                                    .opts=curlOptions(ssl.verifyhost=TRUE)),
                      stringsAsFactors=FALSE, na.strings='')
@@ -90,7 +96,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
         }
     }
 
-    field_names <- sprintf('%s_complete', unique(meta_data$form_name))
+    field_names <- sprintf('%s_complete', forms)
     for (field_name in field_names) {
         data[[field_name]] <- factor(data[[field_name]], levels=c('Incomplete','Complete'))
         if (Hmisc) {
