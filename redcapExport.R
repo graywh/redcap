@@ -70,11 +70,11 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                     if (checkboxLabels) {
                         levels <- choices[i]
                     } else {
-                        levels <- c("Unchecked", "Checked")
+                        levels <- c('Unchecked', 'Checked')
                     }
                     data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=levels)
                 } else {
-                    data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=c(0,1))
+                    data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=c('0','1'))
                 }
                 if (Hmisc) {
                     label(data[[checkbox_name]]) <- sprintf('%s (choice=%s)', clean(fld$field_label), rmq(choices[i]))
@@ -91,9 +91,16 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                     } else {
                         levels <- choices
                     }
-                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=choices)
+                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=levels)
                 } else {
-                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=nums)
+                    if (fld$field_type == 'yesno') {
+                        levels <- c('0','1')
+                    } else if (fld$field_type == 'truefalse') {
+                        levels <- c('0','1')
+                    } else {
+                        levels <- choices
+                    }
+                    data[[fld$field_name]] <- factor(data[[fld$field_name]], levels=levels)
                 }
 
             } else if ((!is.na(fld$text_validation_type_or_show_slider_number) &&
