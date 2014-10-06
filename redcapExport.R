@@ -25,7 +25,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     Hmisc <- require('Hmisc')
 
     # Fetch metadata
-    meta_data <- subset(redcapExportMeta(APIKEY, URI), field_type != 'descriptive')
+    meta_data <- subset(redcapExportMeta(APIKEY, URI), field_type %in% c('text','notes','dropdown','radio','checkbox','calc','slider','yesno','truefalse'))
 
     form_field_names <- sprintf('%s_complete', unique(meta_data$form_name))
     if (!is.null(forms)) {
