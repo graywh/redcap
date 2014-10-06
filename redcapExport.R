@@ -1,4 +1,9 @@
 redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
+
+    if (!require('RCurl')) {
+        stop('RCurl is not installed')
+    }
+
     meta_data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='metadata',
                            format='csv',
                            # RCurl options
@@ -108,10 +113,11 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                         fld$text_validation_type_or_show_slider_number %in% c('float','int') ) ||
                        fld$field_type %in% c('calc') ) {
                 suppressWarnings(data[[fld$field_name]] <- as.numeric(data[[fld$field_name]]))
-            }
 
-            if (Hmisc) {
-                label(data[[fld$field_name]]) <- fld$field_label
+            } else if (fld$field_type != 'descriptive') {
+                if (Hmisc) {
+                    label(data[[fld$field_name]]) <- fld$field_label
+                }
             }
         }
     }
