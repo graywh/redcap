@@ -70,11 +70,11 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
 
         if (fld$field_type == 'checkbox') {
 
-            for (i in seq(length(nums))) {
-                checkbox_name <- sprintf('%s___%s', fld$field_name, nums[i])
+            for (j in seq(length(nums))) {
+                checkbox_name <- sprintf('%s___%s', fld$field_name, nums[j])
                 if (labels) {
                     if (checkboxLabels) {
-                        levels <- choices[i]
+                        levels <- choices[j]
                     } else {
                         levels <- c('Unchecked', 'Checked')
                     }
@@ -83,7 +83,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                     data[[checkbox_name]] <- factor(data[[checkbox_name]], levels=c('0','1'))
                 }
                 if (Hmisc) {
-                    label(data[[checkbox_name]]) <- sprintf('%s (choice=%s)', clean(fld$field_label), rmq(choices[i]))
+                    label(data[[checkbox_name]]) <- sprintf('%s (choice=%s)', clean(fld$field_label), rmq(choices[j]))
                 }
             }
 
