@@ -25,7 +25,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     Hmisc <- require('Hmisc')
 
     # Fetch metadata
-    meta_data <- redcapExportMeta(APIKEY, URI)
+    meta_data <- subset(redcapExportMeta(APIKEY, URI), field_type != 'descriptive')
 
     form_field_names <- sprintf('%s_complete', unique(meta_data$form_name))
     if (!is.null(forms)) {
@@ -114,10 +114,10 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                        fld$field_type %in% c('calc') ) {
                 suppressWarnings(data[[fld$field_name]] <- as.numeric(data[[fld$field_name]]))
 
-            } else if (fld$field_type != 'descriptive') {
-                if (Hmisc) {
-                    label(data[[fld$field_name]]) <- fld$field_label
-                }
+            }
+
+            if (Hmisc) {
+                label(data[[fld$field_name]]) <- fld$field_label
             }
         }
     }
