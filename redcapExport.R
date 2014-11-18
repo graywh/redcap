@@ -7,7 +7,7 @@ redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
     meta_data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='metadata',
                            format='csv',
                            # RCurl options
-                           .opts=curlOptions(ssl.verifyhost=TRUE)),
+                           .opts=curlOptions(ssl.verifyhost=2)),
              stringsAsFactors=FALSE, na.strings='')
     subset(meta_data, field_type != 'field_type')
 }
@@ -59,7 +59,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                                    forms=paste(forms, collapse=','),
                                    fields=paste(fields, collapse=','),
                                    # RCurl options
-                                   .opts=curlOptions(ssl.verifyhost=TRUE)),
+                                   .opts=curlOptions(ssl.verifyhost=2)),
                      stringsAsFactors=FALSE, na.strings='')
 
     for (i in seq_len(nrow(meta_data))) {
