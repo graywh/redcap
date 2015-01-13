@@ -64,10 +64,6 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
 
     for (i in seq_len(nrow(meta_data))) {
         fld <- as.list(meta_data[i,])
-
-        # advance to next field if not in dataset
-        if (is.null(data[[fld$field_name]])) next
-
         choices <- redcapExtractChoices(fld$select_choices_or_calculations)
         nums <- choices$numbers
         choices <- choices$labels
@@ -76,6 +72,10 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
 
             for (j in seq(length(nums))) {
                 checkbox_name <- sprintf('%s___%s', fld$field_name, nums[j])
+
+                # advance to next field if not in dataset
+                if (is.null(data[[checkbox_name]])) next
+
                 if (labels) {
                     if (checkboxLabels) {
                         levels <- choices[j]
@@ -92,6 +92,9 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
             }
 
         } else {
+            # advance to next field if not in dataset
+            if (is.null(data[[fld$field_name]])) next
+
             if (fld$field_type %in% c('radio','dropdown','yesno','truefalse')) {
                 if (labels) {
                     if (fld$field_type == 'yesno') {
