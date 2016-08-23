@@ -1,19 +1,64 @@
 redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
-
     if (!require('RCurl')) {
         stop('RCurl is not installed')
     }
-
     meta_data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='metadata',
+                                        format='csv',
+                                        # RCurl options
+                                        .opts=curlOptions(ssl.verifyhost=2)),
+                          stringsAsFactors=FALSE, na.strings='')
+    subset(meta_data, field_type != 'field_type')
+}
+
+redcapExportArms <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
+    if (!require('RCurl')) {
+        stop('RCurl is not installed')
+    }
+    read.csv(text=postForm(uri=URI, token=APIKEY, content='arm',
                            format='csv',
                            # RCurl options
                            .opts=curlOptions(ssl.verifyhost=2)),
              stringsAsFactors=FALSE, na.strings='')
-    subset(meta_data, field_type != 'field_type')
+}
+
+redcapExportEvents <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
+    if (!require('RCurl')) {
+        stop('RCurl is not installed')
+    }
+    read.csv(text=postForm(uri=URI, token=APIKEY, content='event',
+                           format='csv',
+                           # RCurl options
+                           .opts=curlOptions(ssl.verifyhost=2)),
+             stringsAsFactors=FALSE, na.strings='')
+}
+
+redcapExportMappings <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
+    if (!require('RCurl')) {
+        stop('RCurl is not installed')
+    }
+    read.csv(text=postForm(uri=URI, token=APIKEY, content='formEventMapping',
+                           format='csv',
+                           # RCurl options
+                           .opts=curlOptions(ssl.verifyhost=2)),
+             stringsAsFactors=FALSE, na.strings='')
+}
+
+redcapExportRecords <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', format='csv', type='flat', rawOrLabel='raw', exportCheckboxLabel='false', forms=NULL, fields=NULL, events=NULL) {
+    if (!require('RCurl')) {
+        stop('RCurl is not installed')
+    }
+    read.csv(text=postForm(uri=URI, token=APIKEY, content='record',
+                           format=format, type=type,
+                           # Redcap API options
+                           rawOrLabel=rawOrLabel,
+                           exportCheckboxLabel=exportCheckboxLabel,
+                           forms=forms, fields=fields, events=events,
+                           # RCurl options
+                           .opts=curlOptions(ssl.verifyhost=2)),
+             stringsAsFactors=FALSE, na.strings='')
 }
 
 redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL, fields=NULL, events=NULL) {
-
     if (!require('RCurl')) {
         stop('RCurl is not installed')
     }
@@ -51,17 +96,13 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     }
 
     # Fetch records
-    data <- read.csv(text=postForm(uri=URI, token=APIKEY, content='record',
-                                   format='csv', type='flat',
-                                   # Redcap API options
-                                   rawOrLabel=c('raw','label')[1 + labels], # real values or codes
-                                   exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
-                                   forms=paste(forms, collapse=','),
-                                   events=paste(events, collapse=','),
-                                   fields=paste(fields, collapse=','),
-                                   # RCurl options
-                                   .opts=curlOptions(ssl.verifyhost=2)),
-                     stringsAsFactors=FALSE, na.strings='')
+    data <- redcapExportRecords(APIKEY, URI=URI,
+                                # Redcap API options
+                                rawOrLabel=c('raw','label')[1 + labels], # real values or codes
+                                exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
+                                forms=paste(forms, collapse=','),
+                                fields=paste(fields, collapse=','),
+                                events=paste(events, collapse=','))
 
     for (i in seq_len(nrow(meta_data))) {
         fld <- as.list(meta_data[i,])
