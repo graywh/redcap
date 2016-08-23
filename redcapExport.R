@@ -12,7 +12,7 @@ redcapExportMeta <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/') {
     subset(meta_data, field_type != 'field_type')
 }
 
-redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL, fields=NULL) {
+redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL, fields=NULL, events=NULL) {
 
     if (!require('RCurl')) {
         stop('RCurl is not installed')
@@ -33,7 +33,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
         form_field_names <- sprintf('%s_complete', forms)
     }
     if (!is.null(fields)) {
-        form_fields <- subset(meta_data, form_name %in% forms)$field_name
+        form_fields <- subset(meta_data, form_name %in% forms)$field_name                 # Select all the field (variable) names that are in the forms the user specified.
         if (!all(fields %in% form_fields)) {
             specific_fields <- intersect(fields, c(unique(meta_data$field_name), form_field_names))
             fields <- union(form_fields, specific_fields)
@@ -57,6 +57,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
                                    rawOrLabel=c('raw','label')[1 + labels], # real values or codes
                                    exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
                                    forms=paste(forms, collapse=','),
+                                   events=paste(events, collapse=','),
                                    fields=paste(fields, collapse=','),
                                    # RCurl options
                                    .opts=curlOptions(ssl.verifyhost=2)),
