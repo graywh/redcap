@@ -43,7 +43,7 @@ redcapExportMappings <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/
              stringsAsFactors=FALSE, na.strings='')
 }
 
-redcapExportRecords <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', format='csv', type='flat', rawOrLabel='raw', exportCheckboxLabel='false', forms=NULL, fields=NULL, events=NULL) {
+redcapExportRecords <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', format='csv', type='flat', rawOrLabel='raw', exportSurveyFields='false', exportCheckboxLabel='false', forms=NULL, fields=NULL, events=NULL) {
     if (!require('RCurl')) {
         stop('RCurl is not installed')
     }
@@ -51,6 +51,7 @@ redcapExportRecords <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/'
                            format=format, type=type,
                            # Redcap API options
                            rawOrLabel=rawOrLabel,
+                           exportSurveyFields=exportSurveyFields,
                            exportCheckboxLabel=exportCheckboxLabel,
                            forms=forms, fields=fields, events=events,
                            # RCurl options
@@ -58,7 +59,7 @@ redcapExportRecords <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/'
              stringsAsFactors=FALSE, na.strings='')
 }
 
-redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, checkboxLabels=FALSE, forms=NULL, fields=NULL, events=NULL) {
+redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', labels=TRUE, surveyFields=FALSE, checkboxLabels=FALSE, forms=NULL, fields=NULL, events=NULL) {
     if (!require('RCurl')) {
         stop('RCurl is not installed')
     }
@@ -99,6 +100,7 @@ redcapExport <- function(APIKEY, URI='https://redcap.vanderbilt.edu/api/', label
     data <- redcapExportRecords(APIKEY, URI=URI,
                                 # Redcap API options
                                 rawOrLabel=c('raw','label')[1 + labels], # real values or codes
+                                exportSurveyFields=c('false','true')[1 + surveyFields], # real values or checked/unchecked
                                 exportCheckboxLabel=c('false','true')[1 + checkboxLabels], # real values or checked/unchecked
                                 forms=paste(forms, collapse=','),
                                 fields=paste(fields, collapse=','),
